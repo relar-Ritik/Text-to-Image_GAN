@@ -1,0 +1,8 @@
+flowers_images_path: '/home/.data/102flowers/'
+flowers_embedding_path: '/home/.data/flowers_icml/'
+flowers_text_path: '/home/.data/cvpr2016_flowers/text_c10/'
+flowers_dataset_path: '/home/.data/flowers.hdf5'
+
+flowers_val_split_path: '/home/.data/flowers_icml/valclasses.txt'
+flowers_train_split_path: '/home/.data/flowers_icml/trainclasses.txt'
+flowers_test_split_path: '/home/.data/flowers_icml/testclasses.txt'
