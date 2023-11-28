@@ -92,7 +92,7 @@ class DCGAN(object):
 
                 # Wrong image/text losses for cGAN
                 d_loss_wrong = 0
-                if self.D_type == "cgan" and wrong_images is not None:
+                if self.D_type in ["cgan", "wgan"] and wrong_images is not None:
                     wrong_logits = self.D(wrong_images, right_embed)[0].squeeze()
                     d_loss_wrong = self.loss(wrong_logits, fake_labels)
 
@@ -103,7 +103,7 @@ class DCGAN(object):
 
                 # Regenerate fake images for Generator's backward pass
                 z = torch.randn(right_images.size(0), 100, 1, 1).to(self.device)
-                fake_images = self.G(z, right_embed) if self.D_type == "cgan" else self.G(z)
+                fake_images = self.G(z, right_embed) if self.D_type in ["cgan", "wgan"] else self.G(z)
 
                 # Train Generator
                 self.G.zero_grad()
