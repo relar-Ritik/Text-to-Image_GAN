@@ -3,6 +3,7 @@ from torch import nn
 from tqdm import trange
 from models import vanilla_gan, cgan, classwgan
 import os
+from torch.utils.data import DataLoader
 
 class DCGAN(object):
 
@@ -128,14 +129,12 @@ class DCGAN(object):
 
         return disc_loss, genr_loss
 
-    def generate_img(self, z, number_of_images, train_loader, text_embedding = None):
+    def generate_img(self, z, number_of_images, dataset, text_embedding = None):
         if self.G_type == "vanilla_gan":
             samples = self.G(z).data.cpu().numpy()[:number_of_images]
         if self.G_type in ["cgan", "wgan"]:
             if text_embedding is None:
-                batch_data = next(iter(train_loader))
-                text_embedding = batch_data['right_embed'].to(self.device)[0:1]  # Taking one embedding
-                text_embedding = text_embedding.repeat(z.size(0), 1)  # Repeat to match batch size
+                text_embedding = self.get_random_embeddings(number_of_images, dataset)
             samples = self.G(z, text_embedding).data.cpu().numpy()[:number_of_images]
 
         generated_images = []
@@ -143,7 +142,7 @@ class DCGAN(object):
             generated_images.append(sample.reshape(3, 64, 64).transpose(1, 2, 0))
         return generated_images
 
-    def get_random_embedding(self, train_loader):
-        random_batch = next(iter(train_loader))
-        random_idx = torch.randint(0, random_batch['right_embed'].size(0), (1,))
-        return random_batch['right_embed'][random_idx].to(self.device)
+    def get_random_embeddings(self, number_of_images, dataset):
+        random_batch = next(iter(DataLoader(dataset, batch_size=number_of_images, shuffle=True)))
+        random_indices = torch.randint(0, random_batch['right_embed'].size(0), (number_of_images,))
+        return random_batch['right_embed'][random_indices].to(self.device)

@@ -56,7 +56,7 @@ disc_loss, genr_loss = model.train(train_loader)
 
 # Plot the generated images
 z = torch.randn(100, 100, 1, 1).to(device)
-generated_images = model.generate_img(z, 100, train_loader=train_loader)
+generated_images = model.generate_img(z, 100, dataset)
 fig = plt.figure(figsize=(10, 10))
 gs = gridspec.GridSpec(10, 10)
 gs.update(wspace=0.05, hspace=0.05)
