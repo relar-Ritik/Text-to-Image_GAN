@@ -2,8 +2,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
-tmp.ipynb
-*.xml
+
 
 # C extensions
 *.so
@@ -79,6 +78,8 @@ target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
+.data/flowers.hdf5
+*.xml
 
 # IPython
 profile_default/
