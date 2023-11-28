@@ -4,17 +4,18 @@ from tqdm import trange
 from models import vanilla_gan, cgan, classwgan
 import os
 
+
 class DCGAN(object):
 
-    def __init__(self, epochs, batch_size, device, save_path, G_type = "vanilla_gan", D_type = "vanilla_gan",
-                 lr=0.0002, d_beta1 =0.5, d_beta2= 0.999, g_beta1 =0.5, g_beta2= 0.999, embed_size = 100):
+    def __init__(self, epochs, batch_size, device, save_path, G_type="vanilla_gan", D_type="vanilla_gan",
+                 lr=0.0002, d_beta1=0.5, d_beta2=0.999, g_beta1=0.5, g_beta2=0.999, embed_size=100):
 
         self.embed_size = embed_size
         self.G_type = G_type
-        self.D_type =D_type
+        self.D_type = D_type
         self.lr = lr
         self.d_beta1 = d_beta1
-        self.d_beta2 =d_beta2
+        self.d_beta2 = d_beta2
         self.g_beta1 = g_beta1
         self.g_beta2 = g_beta2
         self.device = device
@@ -23,15 +24,14 @@ class DCGAN(object):
             self.G = vanilla_gan.Generator().to(device)
         elif self.G_type == "cgan":
             self.G = cgan.Generator(embed_size=embed_size).to(device)
-        elif self.G_type =="wgan":
+        elif self.G_type == "wgan":
             self.G = classwgan.Generator().to(device)
-
 
         if self.D_type == "vanilla_gan":
             self.D = vanilla_gan.Discriminator().to(device)
         elif self.D_type == "cgan":
             self.D = cgan.Discriminator(embed_size=embed_size).to(device)
-        elif self.G_type =="wgan":
+        elif self.G_type == "wgan":
             self.G = classwgan.Discriminator().to(device)
 
         self.loss = nn.BCELoss()
@@ -60,7 +60,7 @@ class DCGAN(object):
                 # Conditional inputs
                 right_embed = None
                 wrong_images = None
-                if self.D_type == "cgan":
+                if self.D_type in ["cgan", "wgan"]:
                     right_embed = batch_data['right_embed'].to(self.device)
                     wrong_images = batch_data['wrong_images'].to(self.device)
 
@@ -68,7 +68,7 @@ class DCGAN(object):
                 fake_images = None
                 if self.G_type == "vanilla_gan":
                     fake_images = self.G(z)
-                elif self.G_type == "cgan":
+                elif self.G_type in ["cgan", "wgan"]:
                     fake_images = self.G(z, right_embed)
 
                 # Train Discriminator
@@ -80,7 +80,7 @@ class DCGAN(object):
                     # Fake images
                     fake_logits = self.D(fake_images)
 
-                elif self.D_type == "cgan":
+                elif self.D_type in ["cgan", "wgan"]:
                     # Real images
                     real_logits = self.D(right_images, right_embed)[0]
                     # Fake images
@@ -109,7 +109,7 @@ class DCGAN(object):
                 self.G.zero_grad()
                 if self.D_type == "vanilla_gan":
                     fake_logits = self.D(fake_images)
-                elif self.D_type == "cgan":
+                elif self.D_type in ["cgan", "wgan"]:
                     fake_logits = self.D(fake_images, right_embed)[0]
                 g_loss = self.loss(fake_logits.squeeze(), real_labels)
                 g_loss.backward()
