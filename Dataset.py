@@ -79,8 +79,6 @@ if __name__ == '__main__':
     dataset = T2IGANDataset(dataset_file="data/flowers.hdf5", split="train")
     dataloader = DataLoader(dataset, batch_size=4, shuffle=True)
     for a in dataloader:
-        print(a)
-        print(a.keys())
-        print(a['right_images'].shape)
+        print(a['right_embed'].shape)
         break
 
