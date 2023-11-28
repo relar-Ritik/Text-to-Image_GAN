@@ -12,7 +12,6 @@ import matplotlib.gridspec as gridspec
 
 from Dataset import T2IGANDataset
 from models.dcgan import DCGAN
-#from utils import Utils, Logger
 
 # Configuration setup
 config_path = 'config.yaml'
@@ -30,10 +29,11 @@ d_beta1 =0.5
 d_beta2= 0.999
 g_beta1 =0.5
 g_beta2= 0.999
-save_path = '.ckpt'
+save_path = 'ckpt'
 dataset = T2IGANDataset(dataset_file=".data/flowers.hdf5", split="train")
 train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 num_classes = dataset.get_num_classes()
+embed_size = 100 # if using cGAN
 
 # Set device to GPU
 if torch.backends.mps.is_available():
@@ -44,7 +44,8 @@ else:
     device = torch.device("cpu")
 
 # Training
-model = DCGAN(epochs, batch_size,  device, G_type , D_type , lr, d_beta1 , d_beta2, g_beta1, g_beta2)
+model = DCGAN(epochs, batch_size, device, save_path, num_classes, G_type , D_type ,
+              lr, d_beta1 , d_beta2, g_beta1, g_beta2, embed_size)
 disc_loss, genr_loss = model.train(train_loader)
 
 # Plot the generated images
@@ -67,6 +68,7 @@ for i in range(10):
         image = (image - image.min()) / (image.max() - image.min())
         plt.imshow(image)
 
+plt.savefig("fig/generated_images_{}_{}.png".format(G_type, D_type), bbox_inches='tight')
 plt.show()
 
 # Plot the discriminator and generator loss.
@@ -83,6 +85,8 @@ def plot_gan_losses(disc_loss, genr_loss):
     plt.ylabel('Loss', fontsize=12)
     plt2 = plt.plot(genr_loss)
 
+    # Save the figure
+    plt.savefig("fig/gan_losses_{}_{}.png".format(G_type, D_type), bbox_inches='tight')
     plt.show()
 
 plot_gan_losses(disc_loss, genr_loss)

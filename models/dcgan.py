@@ -1,20 +1,16 @@
 import torch
 from torch import nn
 from tqdm import trange
-from models import vanilla_gan
+from models import vanilla_gan, cgan
+import os
 
 class DCGAN(object):
 
-    def __init__(self, epochs, batch_size,  device, G_type = "vanilla_gan", D_type = "vanilla_gan",
-                 lr=0.0002, d_beta1 =0.5, d_beta2= 0.999, g_beta1 =0.5, g_beta2= 0.999):
+    def __init__(self, epochs, batch_size, device, save_path, num_classes, G_type = "vanilla_gan", D_type = "vanilla_gan",
+                 lr=0.0002, d_beta1 =0.5, d_beta2= 0.999, g_beta1 =0.5, g_beta2= 0.999, embed_size = 100):
 
-        generator_types = {
-            "vanilla_gan": vanilla_gan.Generator
-        }
-
-        discriminator_types = {
-            "vanilla_gan": vanilla_gan.Discriminator
-        }
+        self.embed_size = embed_size
+        self.num_classes = num_classes
         self.G_type = G_type
         self.D_type =D_type
         self.lr = lr
@@ -24,8 +20,16 @@ class DCGAN(object):
         self.g_beta2 = g_beta2
         self.device = device
 
-        self.G = generator_types[G_type]().to(self.device)
-        self.D = discriminator_types[D_type]().to(self.device)
+        if self.G_type == "vanilla_gan":
+            self.G = vanilla_gan.Generator().to(device)
+        elif self.G_type == "cgan":
+            self.G = cgan.Generator(embed_size=embed_size, num_classes=num_classes).to(device)
+
+        if self.D_type == "vanilla_gan":
+            self.D = vanilla_gan.Discriminator().to(device)
+        elif self.D_type == "cgan":
+            self.D = cgan.Discriminator(embed_size=embed_size, num_classes=num_classes).to(device)
+
         self.loss = nn.BCELoss()
 
         self.d_optimizer = torch.optim.Adam(self.D.parameters(), lr=lr, betas=(d_beta1, d_beta2))
@@ -35,9 +39,9 @@ class DCGAN(object):
         self.batch_size = batch_size
 
         self.number_of_images = 10
+        self.save_path = save_path
 
     def train(self, train_loader):
-
         disc_loss = []
         genr_loss = []
 
@@ -89,6 +93,12 @@ class DCGAN(object):
 
                 disc_loss.append(d_loss.item())
                 genr_loss.append(g_loss.item())
+
+            if epoch % 10 == 0:
+                torch.save(self.G.state_dict(),
+                           os.path.join(self.save_path, 'G_ckpt_{}_{}.pth'.format(epoch, self.G_type)))
+                torch.save(self.D.state_dict(),
+                           os.path.join(self.save_path, 'D_ckpt_{}_{}.pth'.format(epoch, self.D_type)))
 
         return disc_loss, genr_loss
 
