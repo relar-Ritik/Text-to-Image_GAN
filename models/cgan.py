@@ -35,7 +35,7 @@ class Generator(nn.Module):
 
     def forward(self, z, text_embedding):
         text_embedding = text_embedding.unsqueeze(-1).unsqueeze(-1)
-        text_embedding = text_embedding.expand(-1, -1, z.size(2), z.size(3))
+        text_embedding = text_embedding.expand(z.size(0), -1, z.size(2), z.size(3))
         gen_input = torch.cat([z, text_embedding], 1)
 
         x = gen_input
