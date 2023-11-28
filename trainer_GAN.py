@@ -30,9 +30,8 @@ d_beta2= 0.999
 g_beta1 =0.5
 g_beta2= 0.999
 save_path = 'ckpt'
-dataset = T2IGANDataset(dataset_file=".data/flowers.hdf5", split="train")
+dataset = T2IGANDataset(dataset_file="data/flowers.hdf5", split="train")
 train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
-num_classes = dataset.get_num_classes()
 embed_size = 100 # if using cGAN
 
 # Set device to GPU
@@ -44,7 +43,7 @@ else:
     device = torch.device("cpu")
 
 # Training
-model = DCGAN(epochs, batch_size, device, save_path, num_classes, G_type , D_type ,
+model = DCGAN(epochs, batch_size, device, save_path, G_type , D_type ,
               lr, d_beta1 , d_beta2, g_beta1, g_beta2, embed_size)
 disc_loss, genr_loss = model.train(train_loader)
 

@@ -71,18 +71,12 @@ class T2IGANDataset(Dataset):
             img = rgb
 
         return img.transpose(2, 0, 1)
-    def get_num_classes(self):
-        unique_classes = set()
-        for example_name in self.img_names:
-            example = self.dataset[example_name]
-            unique_classes.add(example['class'][()])
-        return len(unique_classes)
 
 
 if __name__ == '__main__':
     from torch.utils.data import DataLoader
 
-    dataset = T2IGANDataset(dataset_file=".data/flowers.hdf5", split="train")
+    dataset = T2IGANDataset(dataset_file="data/flowers.hdf5", split="train")
     dataloader = DataLoader(dataset, batch_size=4, shuffle=True)
     for a in dataloader:
         print(a)

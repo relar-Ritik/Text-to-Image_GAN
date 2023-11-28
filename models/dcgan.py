@@ -6,11 +6,10 @@ import os
 
 class DCGAN(object):
 
-    def __init__(self, epochs, batch_size, device, save_path, num_classes, G_type = "vanilla_gan", D_type = "vanilla_gan",
+    def __init__(self, epochs, batch_size, device, save_path, G_type = "vanilla_gan", D_type = "vanilla_gan",
                  lr=0.0002, d_beta1 =0.5, d_beta2= 0.999, g_beta1 =0.5, g_beta2= 0.999, embed_size = 100):
 
         self.embed_size = embed_size
-        self.num_classes = num_classes
         self.G_type = G_type
         self.D_type =D_type
         self.lr = lr
@@ -45,51 +44,62 @@ class DCGAN(object):
         disc_loss = []
         genr_loss = []
 
-        generator_iter = 0
-
         for epoch in trange(self.epochs):
-
             for i, batch_data in enumerate(train_loader):
-                # Step 1: Train discriminator
-                images = batch_data['right_images']
-                z = torch.rand((images.size(0), 100, 1, 1))
+                # Load data
+                right_images = batch_data['right_images'].to(self.device)
+                z = torch.randn(right_images.size(0), 100, 1, 1).to(self.device)
+                real_labels = torch.ones(right_images.size(0)).to(self.device)
+                fake_labels = torch.zeros(right_images.size(0)).to(self.device)
 
-                real_labels = torch.ones(images.size(0))
-                fake_labels = torch.zeros(images.size(0))
+                # Conditional inputs
+                if self.D_type == "cgan":
+                    right_embed = batch_data['right_embed'].to(self.device)
+                    wrong_images = batch_data['wrong_images'].to(self.device)
+                    wrong_embed = batch_data['wrong_embed'].to(self.device)
 
-                images, z = images.to(self.device), z.to(self.device)
-                real_labels, fake_labels = real_labels.to(self.device), fake_labels.to(self.device)
+                # Generate fake images
+                fake_images = None
+                if self.G_type == "cgan":
+                    fake_images = self.G(z, right_embed)
+                else:  # Handle other generator types here
+                    fake_images = self.G(z)  # Default for vanilla_gan
 
-                # Compute the BCE Loss using real images
-                real_logits = self.D(images)
-                real_logits = torch.squeeze(real_logits)
-                d_loss_real = self.loss(real_logits, real_labels)
-
-                # Compute the BCE Loss using fake images
-                fake_images = self.G(z)
-                fake_logits = self.D(fake_images)
-                fake_logits = torch.squeeze(fake_logits)
-                d_loss_fake = self.loss(fake_logits, fake_labels)
-
-                # Optimize discriminator
-                d_loss = d_loss_real + d_loss_fake
+                # Train Discriminator
                 self.D.zero_grad()
+
+                # Real images
+                real_logits = self.D(right_images, right_embed) if self.D_type == "cgan" else self.D(right_images)
+
+                # Fake images
+                fake_logits = self.D(fake_images, right_embed) if self.D_type == "cgan" else self.D(fake_images)
+
+                # Discriminator losses
+                d_loss_real = self.loss(real_logits.squeeze(), real_labels)
+                d_loss_fake = self.loss(fake_logits.squeeze(), fake_labels)
+
+                # Wrong image/text losses for cGAN
+                d_loss_wrong = 0
+                if self.D_type == "cgan":
+                    wrong_logits_img = self.D(wrong_images, right_embed).squeeze() if wrong_images is not None else 0
+                    wrong_logits_txt = self.D(right_images, wrong_embed).squeeze() if wrong_embed is not None else 0
+                    d_loss_wrong = self.loss(wrong_logits_img, fake_labels) + self.loss(wrong_logits_txt, fake_labels)
+
+                # Total discriminator loss
+                d_loss = d_loss_real + d_loss_fake + d_loss_wrong
                 d_loss.backward()
                 self.d_optimizer.step()
 
-                # Step 2: Train Generator
-                z = torch.randn(images.size(0), 100, 1, 1).to(self.device)
+                # Regenerate fake images for Generator's backward pass
+                z = torch.randn(right_images.size(0), 100, 1, 1).to(self.device)
+                fake_images = self.G(z, right_embed) if self.D_type == "cgan" else self.G(z)
 
-                fake_images = self.G(z)
-                fake_logits = self.D(fake_images)
-                fake_logits = torch.squeeze(fake_logits)
-                g_loss = self.loss(fake_logits, real_labels)
-
-                self.D.zero_grad()
+                # Train Generator
                 self.G.zero_grad()
+                fake_logits = self.D(fake_images, right_embed) if self.D_type == "cgan" else self.D(fake_images)
+                g_loss = self.loss(fake_logits.squeeze(), real_labels)
                 g_loss.backward()
                 self.g_optimizer.step()
-                generator_iter += 1
 
                 disc_loss.append(d_loss.item())
                 genr_loss.append(g_loss.item())
