@@ -48,10 +48,10 @@ class DCGAN(object):
             for i, batch_data in enumerate(train_loader):
                 # Step 1: Train discriminator
                 images = batch_data['right_images']
-                z = torch.rand((self.batch_size, 100, 1, 1))
+                z = torch.rand((images.size(0), 100, 1, 1))
 
-                real_labels = torch.ones(self.batch_size)
-                fake_labels = torch.zeros(self.batch_size)
+                real_labels = torch.ones(images.size(0))
+                fake_labels = torch.zeros(images.size(0))
 
                 images, z = images.to(self.device), z.to(self.device)
                 real_labels, fake_labels = real_labels.to(self.device), fake_labels.to(self.device)
@@ -74,7 +74,7 @@ class DCGAN(object):
                 self.d_optimizer.step()
 
                 # Step 2: Train Generator
-                z = torch.randn(self.batch_size, 100, 1, 1).to(self.device)
+                z = torch.randn(images.size(0), 100, 1, 1).to(self.device)
 
                 fake_images = self.G(z)
                 fake_logits = self.D(fake_images)
@@ -96,5 +96,5 @@ class DCGAN(object):
         samples = self.G(z).data.cpu().numpy()[:number_of_images]
         generated_images = []
         for sample in samples:
-            generated_images.append(sample.reshape(28, 28))
+            generated_images.append(sample.reshape(3, 64, 64).transpose(1, 2, 0))
         return generated_images

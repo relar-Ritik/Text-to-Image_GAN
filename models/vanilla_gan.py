@@ -34,7 +34,7 @@ class Generator(nn.Module):
 
         for layer in self.main:
             x = layer(x)
-            # print('G: ', x.size())
+            #print('G: ', x.size())
 
         return x
 
@@ -66,6 +66,6 @@ class Discriminator(nn.Module):
 
         for layer in self.main:
             x = layer(x)
-            # print('D: ', x.size())
+            #print('D: ', x.size())
 
         return x.view(-1, 1).squeeze(1)
