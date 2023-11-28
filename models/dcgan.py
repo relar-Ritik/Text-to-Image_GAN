@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 from tqdm import trange
-from models import vanilla_gan, cgan
+from models import vanilla_gan, cgan, classwgan
 import os
 
 class DCGAN(object):
@@ -23,11 +23,16 @@ class DCGAN(object):
             self.G = vanilla_gan.Generator().to(device)
         elif self.G_type == "cgan":
             self.G = cgan.Generator(embed_size=embed_size).to(device)
+        elif self.G_type =="wgan":
+            self.G = classwgan.Generator().to(device)
+
 
         if self.D_type == "vanilla_gan":
             self.D = vanilla_gan.Discriminator().to(device)
         elif self.D_type == "cgan":
             self.D = cgan.Discriminator(embed_size=embed_size).to(device)
+        elif self.G_type =="wgan":
+            self.G = classwgan.Discriminator().to(device)
 
         self.loss = nn.BCELoss()
 
