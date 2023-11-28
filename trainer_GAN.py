@@ -9,6 +9,7 @@ from PIL import Image
 import os
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+import  random
 
 from Dataset import T2IGANDataset
 from models.dcgan import DCGAN
@@ -41,6 +42,12 @@ elif torch.cuda.is_available():
     device = torch.device("cuda")
 else:
     device = torch.device("cpu")
+
+# Set seed for reproducibility
+SEED = 42
+torch.manual_seed(SEED)
+np.random.seed(SEED)
+random.seed(SEED)
 
 # Training
 model = DCGAN(epochs, batch_size, device, save_path, G_type , D_type ,
