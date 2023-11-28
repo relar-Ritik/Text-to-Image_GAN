@@ -23,8 +23,8 @@ batch_size = 64
 lr = 0.0002
 epochs = 1
 num_channels=3
-G_type = "vanilla_gan" # Generator type
-D_type = "vanilla_gan" # Discriminator type
+G_type = "cgan" # Generator type
+D_type = "cgan" # Discriminator type
 d_beta1 =0.5
 d_beta2= 0.999
 g_beta1 =0.5
@@ -32,7 +32,7 @@ g_beta2= 0.999
 save_path = 'ckpt'
 dataset = T2IGANDataset(dataset_file="data/flowers.hdf5", split="train")
 train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
-embed_size = 100 # if using cGAN
+embed_size = 1024 # if using cGAN
 
 # Set device to GPU
 if torch.backends.mps.is_available():

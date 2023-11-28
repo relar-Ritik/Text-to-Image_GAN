@@ -22,12 +22,12 @@ class DCGAN(object):
         if self.G_type == "vanilla_gan":
             self.G = vanilla_gan.Generator().to(device)
         elif self.G_type == "cgan":
-            self.G = cgan.Generator(embed_size=embed_size, num_classes=num_classes).to(device)
+            self.G = cgan.Generator(embed_size=embed_size).to(device)
 
         if self.D_type == "vanilla_gan":
             self.D = vanilla_gan.Discriminator().to(device)
         elif self.D_type == "cgan":
-            self.D = cgan.Discriminator(embed_size=embed_size, num_classes=num_classes).to(device)
+            self.D = cgan.Discriminator(embed_size=embed_size).to(device)
 
         self.loss = nn.BCELoss()
 
@@ -53,26 +53,33 @@ class DCGAN(object):
                 fake_labels = torch.zeros(right_images.size(0)).to(self.device)
 
                 # Conditional inputs
+                right_embed = None
+                wrong_images = None
                 if self.D_type == "cgan":
                     right_embed = batch_data['right_embed'].to(self.device)
                     wrong_images = batch_data['wrong_images'].to(self.device)
-                    wrong_embed = batch_data['wrong_embed'].to(self.device)
 
                 # Generate fake images
                 fake_images = None
-                if self.G_type == "cgan":
+                if self.G_type == "vanilla_gan":
+                    fake_images = self.G(z)
+                elif self.G_type == "cgan":
                     fake_images = self.G(z, right_embed)
-                else:  # Handle other generator types here
-                    fake_images = self.G(z)  # Default for vanilla_gan
 
                 # Train Discriminator
                 self.D.zero_grad()
 
-                # Real images
-                real_logits = self.D(right_images, right_embed) if self.D_type == "cgan" else self.D(right_images)
+                if self.D_type == "vanilla_gan":
+                    # Real images
+                    real_logits = self.D(right_images)
+                    # Fake images
+                    fake_logits = self.D(fake_images)
 
-                # Fake images
-                fake_logits = self.D(fake_images, right_embed) if self.D_type == "cgan" else self.D(fake_images)
+                elif self.D_type == "cgan":
+                    # Real images
+                    real_logits = self.D(right_images, right_embed)[0]
+                    # Fake images
+                    fake_logits = self.D(fake_images, right_embed)[0]
 
                 # Discriminator losses
                 d_loss_real = self.loss(real_logits.squeeze(), real_labels)
@@ -80,10 +87,9 @@ class DCGAN(object):
 
                 # Wrong image/text losses for cGAN
                 d_loss_wrong = 0
-                if self.D_type == "cgan":
-                    wrong_logits_img = self.D(wrong_images, right_embed).squeeze() if wrong_images is not None else 0
-                    wrong_logits_txt = self.D(right_images, wrong_embed).squeeze() if wrong_embed is not None else 0
-                    d_loss_wrong = self.loss(wrong_logits_img, fake_labels) + self.loss(wrong_logits_txt, fake_labels)
+                if self.D_type == "cgan" and wrong_images is not None:
+                    wrong_logits = self.D(wrong_images, right_embed)[0].squeeze()
+                    d_loss_wrong = self.loss(wrong_logits, fake_labels)
 
                 # Total discriminator loss
                 d_loss = d_loss_real + d_loss_fake + d_loss_wrong
@@ -96,7 +102,10 @@ class DCGAN(object):
 
                 # Train Generator
                 self.G.zero_grad()
-                fake_logits = self.D(fake_images, right_embed) if self.D_type == "cgan" else self.D(fake_images)
+                if self.D_type == "vanilla_gan":
+                    fake_logits = self.D(fake_images)
+                elif self.D_type == "cgan":
+                    fake_logits = self.D(fake_images, right_embed)[0]
                 g_loss = self.loss(fake_logits.squeeze(), real_labels)
                 g_loss.backward()
                 self.g_optimizer.step()
