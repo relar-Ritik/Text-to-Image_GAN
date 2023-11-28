@@ -122,8 +122,19 @@ class DCGAN(object):
         return disc_loss, genr_loss
 
     def generate_img(self, z, number_of_images):
-        samples = self.G(z).data.cpu().numpy()[:number_of_images]
+        if self.G_type == "vanilla_gan":
+            samples = self.G(z).data.cpu().numpy()[:number_of_images]
+        if self.G_type == "cgan":
+            if text_embedding is None:
+                text_embedding = self.get_random_embedding(train_loader)
+            samples = self.G(z, text_embedding).data.cpu().numpy()[:number_of_images]
+
         generated_images = []
         for sample in samples:
             generated_images.append(sample.reshape(3, 64, 64).transpose(1, 2, 0))
         return generated_images
+
+    def get_random_embedding(self):
+        random_batch = next(iter(self.train_loader))
+        random_idx = torch.randint(0, random_batch['right_embed'].size(0), (1,))
+        return random_batch['right_embed'][random_idx].to(self.device)
