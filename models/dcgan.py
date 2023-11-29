@@ -4,18 +4,20 @@ from tqdm import trange
 from models import vanilla_gan, cgan, classwgan
 import os
 from torch.utils.data import DataLoader
+import wandb
+
 
 class DCGAN(object):
 
-    def __init__(self, epochs, batch_size, device, save_path, G_type = "vanilla_gan", D_type = "vanilla_gan",
-                 lr=0.0002, d_beta1 =0.5, d_beta2= 0.999, g_beta1 =0.5, g_beta2= 0.999, embed_size = 100):
+    def __init__(self, epochs, batch_size, device, save_path, G_type="vanilla_gan", D_type="vanilla_gan",
+                 lr=0.0002, d_beta1=0.5, d_beta2=0.999, g_beta1=0.5, g_beta2=0.999, embed_size=100):
 
         self.embed_size = embed_size
         self.G_type = G_type
-        self.D_type =D_type
+        self.D_type = D_type
         self.lr = lr
         self.d_beta1 = d_beta1
-        self.d_beta2 =d_beta2
+        self.d_beta2 = d_beta2
         self.g_beta1 = g_beta1
         self.g_beta2 = g_beta2
         self.device = device
@@ -45,7 +47,7 @@ class DCGAN(object):
         self.number_of_images = 10
         self.save_path = save_path
 
-    def train(self, train_loader):
+    def train(self, train_loader, dataset):
         disc_loss = []
         genr_loss = []
 
@@ -101,6 +103,7 @@ class DCGAN(object):
                 d_loss.backward()
                 self.d_optimizer.step()
 
+
                 # Regenerate fake images for Generator's backward pass
                 z = torch.randn(right_images.size(0), 100, 1, 1).to(self.device)
                 if self.G_type == "vanilla_gan":
@@ -117,10 +120,13 @@ class DCGAN(object):
                 g_loss = self.loss(fake_logits.squeeze(), real_labels)
                 g_loss.backward()
                 self.g_optimizer.step()
+                wandb.log({"Discriminator Loss": d_loss.item(), "Generator Loss": g_loss.item()})
 
                 disc_loss.append(d_loss.item())
                 genr_loss.append(g_loss.item())
 
+            sample_gen_images = self.generate_img(torch.randn(100, 100, 1, 1).to(self.device), 25, dataset)
+            wandb.log({"generated_images": [wandb.Image(image) for image in sample_gen_images]}, step=epoch)
             if epoch % 10 == 0:
                 torch.save(self.G.state_dict(),
                            os.path.join(self.save_path, 'G_ckpt_{}_{}.pth'.format(epoch, self.G_type)))
@@ -129,7 +135,7 @@ class DCGAN(object):
 
         return disc_loss, genr_loss
 
-    def generate_img(self, z, number_of_images, dataset, text_embedding = None):
+    def generate_img(self, z, number_of_images, dataset, text_embedding=None):
         if self.G_type == "vanilla_gan":
             samples = self.G(z).data.cpu().numpy()[:number_of_images]
         if self.G_type in ["cgan", "wgan"]:

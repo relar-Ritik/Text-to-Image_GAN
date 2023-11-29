@@ -40,6 +40,7 @@ class Generator(nn.Module):
         project_embed = self.projection(embed).view(-1, 128, 1, 1)
         return self.gen(torch.cat([project_embed, z], 1))
 
+
 class Discriminator(nn.Module):
     def __init__(self, image_size=64, inp_channels=3, projected_dims=128, embed_dims=1024):
         super().__init__()
@@ -49,16 +50,16 @@ class Discriminator(nn.Module):
         self.embed_dims = embed_dims
 
         self.dis1 = nn.Sequential(
-            nn.Conv2d(self.inp_channels, 64, 4,2,1, bias=False),
+            nn.Conv2d(self.inp_channels, 64, 4, 2, 1, bias=False),
             nn.LeakyReLU(0.2, inplace=True),
 
-            nn.Conv2d(64, 64*2, 4,2,1, bias=False),
+            nn.Conv2d(64, 64 * 2, 4, 2, 1, bias=False),
             nn.LeakyReLU(negative_slope=0.2, inplace=True),
 
-            nn.Conv2d(64*2, 64*4, 4,2,1, bias=False),
+            nn.Conv2d(64 * 2, 64 * 4, 4, 2, 1, bias=False),
             nn.LeakyReLU(negative_slope=0.2, inplace=True),
 
-            nn.Conv2d(64*4, 64*8, 4,2,1, bias=False),
+            nn.Conv2d(64 * 4, 64 * 8, 4, 2, 1, bias=False),
             nn.LeakyReLU(negative_slope=0.2, inplace=True)
         )
 
@@ -68,13 +69,12 @@ class Discriminator(nn.Module):
             nn.LeakyReLU(negative_slope=0.2, inplace=True)
         )
 
-        self.dis2 = nn.Conv2d(64*8+self.projected_dims, 1, 4, 1, 0, bias=False)
+        self.dis2 = nn.Conv2d(64 * 8 + self.projected_dims, 1, 4, 1, 0, bias=False)
 
     def forward(self, inp, embed):
         d1 = self.dis1(inp)
-        proj_em = self.projection(embed).repeat(4,4,1,1).permute(2,3,0,1)
-        return self.dis2(torch.cat([d1, proj_em], 1)).view(-1, 1).squeeze(1)
-
+        proj_em = self.projection(embed).repeat(4, 4, 1, 1).permute(2, 3, 0, 1)
+        return self.dis2(torch.cat([d1, proj_em], 1)).view(-1, 1).squeeze(1), d1
 
 
 if __name__ == '__main__':
@@ -86,5 +86,4 @@ if __name__ == '__main__':
     print("Success")
 
     dis = Discriminator()
-    print(dis(img, em).shape)
-
+    print(dis(img, em)[0].shape)

@@ -2,6 +2,7 @@
 import numpy as np
 import torch
 import yaml
+import wandb
 from torch import nn
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
@@ -35,6 +36,17 @@ dataset = T2IGANDataset(dataset_file="data/flowers.hdf5", split="train")
 train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 embed_size = 1024 # if using cGAN
 
+wandb.init(
+      # Set the project where this run will be logged
+      project="Text-To-Image",
+      # We pass a run name (otherwise it’ll be randomly assigned, like sunshine-lollypop-10)
+      # Track hyperparameters and run metadata
+      config={
+      "learning_rate": lr,
+      "architecture": G_type,
+      "epochs": epochs,
+      })
+
 # Set device to GPU
 if torch.backends.mps.is_available():
     device = torch.device("mps")
@@ -52,7 +64,7 @@ random.seed(SEED)
 # Training
 model = DCGAN(epochs, batch_size, device, save_path, G_type , D_type ,
               lr, d_beta1 , d_beta2, g_beta1, g_beta2, embed_size)
-disc_loss, genr_loss = model.train(train_loader)
+disc_loss, genr_loss = model.train(train_loader, dataset)
 
 # Plot the generated images
 z = torch.randn(100, 100, 1, 1).to(device)
@@ -96,3 +108,4 @@ def plot_gan_losses(disc_loss, genr_loss):
     plt.show()
 
 plot_gan_losses(disc_loss, genr_loss)
+wandb.finish()

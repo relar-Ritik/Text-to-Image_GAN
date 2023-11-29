@@ -4,6 +4,7 @@ from torch.autograd import Variable
 import numpy as np
 from tqdm import trange
 
+
 class Generator(nn.Module):
     def __init__(self, num_channels=3, embed_size=1024):
         super(Generator, self).__init__()
@@ -46,6 +47,7 @@ class Generator(nn.Module):
 
         return x
 
+
 class Discriminator(nn.Module):
     def __init__(self, embed_size):
         super(Discriminator, self).__init__()
@@ -77,6 +79,7 @@ class Discriminator(nn.Module):
 
     def forward(self, input, text_embedding):
         x_intermediate = self.netD_1(input)
-        text_embedding = text_embedding.unsqueeze(2).unsqueeze(3).expand(-1, -1, x_intermediate.size(2), x_intermediate.size(3))
+        text_embedding = text_embedding.unsqueeze(2).unsqueeze(3).expand(-1, -1, x_intermediate.size(2),
+                                                                         x_intermediate.size(3))
         d_input = torch.cat([x_intermediate, text_embedding], 1)
         return self.netD_2(d_input).view(-1, 1).squeeze(1), x_intermediate
