@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-from tqdm import trange
+from tqdm import trange, tqdm
 from models import vanilla_gan, cgan, classwgan
 import os
 from torch.utils.data import DataLoader
@@ -51,8 +51,8 @@ class DCGAN(object):
         disc_loss = []
         genr_loss = []
 
-        for epoch in trange(self.epochs):
-            for i, batch_data in enumerate(train_loader):
+        for epoch in range(self.epochs):
+            for i, batch_data in enumerate(tqdm(train_loader)):
                 # Load data
                 right_images = batch_data['right_images'].to(self.device)
                 z = torch.randn(right_images.size(0), 100, 1, 1).to(self.device)
@@ -125,7 +125,7 @@ class DCGAN(object):
                 disc_loss.append(d_loss.item())
                 genr_loss.append(g_loss.item())
 
-            sample_gen_images = self.generate_img(torch.randn(100, 100, 1, 1).to(self.device), 25, dataset)
+            sample_gen_images = self.generate_img(torch.randn(100, 100, 1, 1).to(self.device), 100, dataset)
             wandb.log({"generated_images": [wandb.Image(image) for image in sample_gen_images]}, step=epoch)
             if epoch % 10 == 0:
                 torch.save(self.G.state_dict(),
