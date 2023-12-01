@@ -126,7 +126,7 @@ class DCGAN(object):
                 genr_loss.append(g_loss.item())
 
             sample_gen_images = self.generate_img(torch.randn(100, 100, 1, 1).to(self.device), 100, dataset)
-            wandb.log({"generated_images": [wandb.Image(image) for image in sample_gen_images]}, step=epoch)
+            wandb.log({"generated_images": [wandb.Image(image) for image in sample_gen_images]}, step=epoch*460)
             if epoch % 10 == 0:
                 torch.save(self.G.state_dict(),
                            os.path.join(self.save_path, 'G_ckpt_{}_{}.pth'.format(epoch, self.G_type)))
