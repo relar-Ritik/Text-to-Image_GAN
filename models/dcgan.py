@@ -152,3 +152,4 @@ class DCGAN(object):
         random_batch = next(iter(DataLoader(dataset, batch_size=number_of_images, shuffle=True)))
         random_indices = torch.randint(0, random_batch['right_embed'].size(0), (number_of_images,))
         return random_batch['right_embed'][random_indices].to(self.device)
+        
