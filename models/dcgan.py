@@ -34,7 +34,7 @@ class DCGAN(object):
         elif self.D_type == "cgan":
             self.D = cgan.Discriminator(embed_size=embed_size).to(device)
         elif self.D_type == "wgan":
-            self.D = classwgan.Generator().to(device)
+            self.D = classwgan.Discriminator().to(device)
 
         self.loss = nn.BCELoss()
 
