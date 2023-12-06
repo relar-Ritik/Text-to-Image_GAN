@@ -21,7 +21,7 @@ with open(config_path, 'r') as f:
     config = yaml.load(f, Loader=yaml.FullLoader)
 
 # Global parameters
-batch_size = 64
+batch_size = 512
 lr = 0.0002
 epochs = 1
 num_channels=3
@@ -32,13 +32,18 @@ d_beta2= 0.999
 g_beta1 =0.5
 g_beta2= 0.999
 save_path = 'ckpt'
-dataset = T2IGANDataset(dataset_file="data/flowers.hdf5", split="train")
+
+idx = 3
+embeddings = ['default', 'all-mpnet-base-v2', 'all-distilroberta-v1', 'all-MiniLM-L12-v2']
+names = ['default', 'MPNET', 'DistilROBERTa' , 'miniLM-L12']
+dataset = T2IGANDataset(dataset_file="data/flowers.hdf5", split="train", emb_type=embeddings[idx])
 train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
-embed_size = 1024 # if using cGAN
+embed_size = dataset.embed_dim # if using cGAN
 
 wandb.init(
       # Set the project where this run will be logged
       project="Text-To-Image",
+      name=f"T2I_GAN_{names[idx]}",
       # We pass a run name (otherwise it’ll be randomly assigned, like sunshine-lollypop-10)
       # Track hyperparameters and run metadata
       config={
@@ -48,9 +53,9 @@ wandb.init(
       })
 
 # Set device to GPU
-if torch.backends.mps.is_available():
-    device = torch.device("mps")
-elif torch.cuda.is_available():
+# if torch.backends.mps.is_available():
+#     device = torch.device("mps")
+if torch.cuda.is_available():
     device = torch.device("cuda")
 else:
     device = torch.device("cpu")
