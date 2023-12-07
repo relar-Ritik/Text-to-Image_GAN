@@ -123,7 +123,7 @@ class DCGAN(object):
                 g_loss = self.loss(fake_logits.squeeze(), real_labels)
 
                 # Add Custom Loss
-                if self.D_type in ["cgan", "vanilla_gan"]:
+                if self.D_type in ["cgan"]:
                     # Feature matching loss
                     _, activation_real = self.D(right_images, right_embed)[1]
                     feature_loss = nn.MSELoss()(activation_fake,
