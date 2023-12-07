@@ -32,6 +32,8 @@ d_beta2= 0.999
 g_beta1 =0.5
 g_beta2= 0.999
 save_path = 'ckpt'
+l1_coef = 50
+l2_coef = 100
 
 idx = 3
 embeddings = ['default', 'all-mpnet-base-v2', 'all-distilroberta-v1', 'all-MiniLM-L12-v2']
@@ -68,7 +70,8 @@ random.seed(SEED)
 
 # Training
 model = DCGAN(epochs, batch_size, device, save_path, G_type , D_type ,
-              lr, d_beta1 , d_beta2, g_beta1, g_beta2, embed_size)
+              lr, d_beta1 , d_beta2, g_beta1, g_beta2, embed_size,
+              l1_coef, l2_coef)
 disc_loss, genr_loss = model.train(train_loader, dataset)
 
 # Plot the generated images

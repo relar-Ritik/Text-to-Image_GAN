@@ -10,7 +10,8 @@ import wandb
 class DCGAN(object):
 
     def __init__(self, epochs, batch_size, device, save_path, G_type="vanilla_gan", D_type="vanilla_gan",
-                 lr=0.0002, d_beta1=0.5, d_beta2=0.999, g_beta1=0.5, g_beta2=0.999, embed_size=100):
+                 lr=0.0002, d_beta1=0.5, d_beta2=0.999, g_beta1=0.5, g_beta2=0.999, embed_size=100,
+                 l1_coef = 50, l2_coef = 100):
 
         self.embed_size = embed_size
         self.G_type = G_type
@@ -21,6 +22,8 @@ class DCGAN(object):
         self.g_beta1 = g_beta1
         self.g_beta2 = g_beta2
         self.device = device
+        self.l1_coef = l1_coef
+        self.l2_coef = l2_coef
 
         if self.G_type == "vanilla_gan":
             self.G = vanilla_gan.Generator().to(device)
@@ -116,8 +119,21 @@ class DCGAN(object):
                 if self.D_type == "vanilla_gan":
                     fake_logits = self.D(fake_images)
                 elif self.D_type in ["cgan", "wgan"]:
-                    fake_logits = self.D(fake_images, right_embed)[0]
+                    fake_logits = self.D(fake_images, right_embed)
                 g_loss = self.loss(fake_logits.squeeze(), real_labels)
+
+                # Add Custom Loss
+                if self.D_type in ["cgan", "vanilla_gan"]:
+                    # Feature matching loss
+                    _, activation_real = self.D(right_images, right_embed)[1]
+                    feature_loss = nn.MSELoss()(activation_fake,
+                                                activation_real.detach())
+
+                    # L1 distance between the generated and real images
+                    l1_loss = nn.L1Loss()(fake_images, right_images)
+
+                    g_loss += self.l2_coef * feature_loss + self.l1_coef * l1_loss
+
                 g_loss.backward()
                 self.g_optimizer.step()
                 wandb.log({"Discriminator Loss": d_loss.item(), "Generator Loss": g_loss.item()})
