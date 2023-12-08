@@ -23,7 +23,7 @@ with open(config_path, 'r') as f:
 # Global parameters
 batch_size = 512
 lr = 0.0002
-epochs = 1
+epochs = 100
 num_channels=3
 G_type = "cgan" # Generator type
 D_type = "cgan" # Discriminator type
@@ -35,17 +35,19 @@ save_path = 'ckpt'
 l1_coef = 50
 l2_coef = 100
 
-idx = 3
+idx = 0
 embeddings = ['default', 'all-mpnet-base-v2', 'all-distilroberta-v1', 'all-MiniLM-L12-v2']
 names = ['default', 'MPNET', 'DistilROBERTa' , 'miniLM-L12']
-dataset = T2IGANDataset(dataset_file="data/flowers.hdf5", split="train", emb_type=embeddings[idx])
+dataset = T2IGANDataset(dataset_file="flowers.hdf5", split="train", emb_type=embeddings[idx])
+bird_dataset = T2IGANDataset(dataset_file="birds.hdf5", split="train", emb_type=embeddings[idx])
 train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+bird_loader = DataLoader(bird_dataset, batch_size=batch_size, shuffle=True)
 embed_size = dataset.embed_dim # if using cGAN
 
 wandb.init(
       # Set the project where this run will be logged
       project="Text-To-Image",
-      name=f"T2I_GAN_{names[idx]}",
+      name=f"default_retrain_for_weights",
       # We pass a run name (otherwise it’ll be randomly assigned, like sunshine-lollypop-10)
       # Track hyperparameters and run metadata
       config={
@@ -71,8 +73,8 @@ random.seed(SEED)
 # Training
 model = DCGAN(epochs, batch_size, device, save_path, G_type , D_type ,
               lr, d_beta1 , d_beta2, g_beta1, g_beta2, embed_size,
-              l1_coef, l2_coef)
-disc_loss, genr_loss = model.train(train_loader, dataset)
+              l1_coef, l2_coef, train_bird=True)
+disc_loss, genr_loss = model.train(flower_data_loader=train_loader, bird_data_loader=bird_loader, bird_dataset=bird_dataset, flower_dataset=dataset)
 
 # Plot the generated images
 z = torch.randn(100, 100, 1, 1).to(device)

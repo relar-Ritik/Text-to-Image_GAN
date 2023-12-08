@@ -5,7 +5,7 @@ from torch.utils.data import Dataset
 import h5py
 import numpy as np
 from PIL import Image
-from sentence_transformers import SentenceTransformer
+
 
 
 
@@ -19,15 +19,15 @@ class T2IGANDataset(Dataset):
         self.emb_type = emb_type
         if emb_type == 'default':
             self.embed_dim = 1024
-        elif emb_type == 'all-mpnet-base-v2':
-            self.model = SentenceTransformer(emb_type)
-            self.embed_dim = 768
-        elif emb_type =='all-distilroberta-v1':
-            self.model = SentenceTransformer(emb_type)
-            self.embed_dim = 768
-        elif emb_type == 'all-MiniLM-L12-v2':
-            self.model = SentenceTransformer(emb_type)
-            self.embed_dim = 384
+        # elif emb_type == 'all-mpnet-base-v2':
+        #     self.model = SentenceTransformer(emb_type)
+        #     self.embed_dim = 768
+        # elif emb_type =='all-distilroberta-v1':
+        #     self.model = SentenceTransformer(emb_type)
+        #     self.embed_dim = 768
+        # elif emb_type == 'all-MiniLM-L12-v2':
+        #     self.model = SentenceTransformer(emb_type)
+        #     self.embed_dim = 384
 
        
 
