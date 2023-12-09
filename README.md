@@ -29,7 +29,7 @@ We used four different text encoders in this project:
 We use three DCGANs as our model:
 - [Vanilla GAN](models/vanilla_gan.py) (implemented but not used)
 - [Conditional GAN (CGAN)](models/cgan.py)
-- [Conditional Wasserstein GAN (WGAN)](Wasserstein GAN (WGAN))
+- [Conditional Wasserstein GAN (WGAN)](models/classwgan.py)
 
 They can all be found in this folder: [models](models)
 
