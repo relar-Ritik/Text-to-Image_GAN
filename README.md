@@ -16,7 +16,8 @@ Use this file to install:  [requirements.txt](requirements.txt)
 - h5py~=3.7.0
 - Pillow~=9.4.0
 - PyYAML~=6.0
-- matplotlib~=3.7.1
+- matplotlib~=3.7.1 
+- sentence_transformers
 
 ## Implementation details
 
