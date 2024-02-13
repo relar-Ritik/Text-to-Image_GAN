@@ -6,6 +6,7 @@ This project explores the use of Conditional Generative Adversarial Networks (CG
 
 Dataset links:
 Flower Dataset [link](https://drive.google.com/file/d/1tEqNkn1-fsGp4lV8QcbtRVowmDSsW-1x/view?usp=sharing)
+example: ![Example of generated image and the input text](example/WhatsApp%20Image%202023-12-08%20at%207.21.56%20PM.jpeg)
 
 ## Requirements
 
